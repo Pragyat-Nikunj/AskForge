@@ -2,8 +2,8 @@ import Answers from "@/components/Answers";
 import Comments from "@/components/Comments";
 import { MarkdownPreview } from "@/components/RTE";
 import VoteButtons from "@/components/VoteButtons";
-import {Particles} from "@/components/magicui/particles";
-import {ShimmerButton} from "@/components/magicui/shimmer-button";
+import { Particles } from "@/components/magicui/particles";
+import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { avatars } from "@/models/client/config";
 import {
     answerCollection,
@@ -29,10 +29,9 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 
 dayjs.extend(relativeTime);
 
-const Page = async ({ params }: { params: Promise<{ quesId: string; quesName: string }> }) => {
-    const resolvedParams = await params;
-    const questionId = resolvedParams.quesName; 
-   
+const Page = async ({ params }: { params: { quesId: string; quesName: string } }) => {
+    const questionId = params.quesName;
+
     const [question, answers, upvotes, downvotes, comments] = await Promise.all([
         databases.getDocument(db, questionCollection, questionId),
         databases.listDocuments(db, answerCollection, [

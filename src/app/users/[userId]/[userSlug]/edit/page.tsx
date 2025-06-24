@@ -13,7 +13,7 @@ const Page = ({
     params,
     searchParams,
 }: {
-    params: Promise<{ userId: string; userSlug: string }>;
+    params: { userId: string; userSlug: string };
     searchParams: { page?: string };
 }) => {
     const [name, setName] = useState("");
@@ -22,9 +22,6 @@ const Page = ({
     const router = useRouter();
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-
-    // Unwrap params using React.use()
-    const resolvedParams = React.use(params);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -36,7 +33,7 @@ const Page = ({
             setError("Password is required to change email.");
             return;
         }
-        const userId = resolvedParams.userId;
+        const userId = params.userId;
         try {
             setLoading(true);
             setError(null);
@@ -51,7 +48,7 @@ const Page = ({
             }
             if (updated) {
                 toast.success("Profile updated successfully");
-                router.push(`/users/${userId}/${resolvedParams.userSlug}`);
+                router.push(`/users/${userId}/${params.userSlug}`);
                 router.refresh();
             } else {
                 setError("No changes made.");
@@ -106,9 +103,8 @@ const Page = ({
                     <button
                         type="submit"
                         disabled={loading}
-                        className={`px-4 py-2 bg-blue-500 text-white rounded ${
-                            loading ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
+                        className={`px-4 py-2 bg-blue-500 text-white rounded ${loading ? "opacity-50 cursor-not-allowed" : ""
+                            }`}
                     >
                         {loading ? "Updating..." : "Update Profile"}
                     </button>

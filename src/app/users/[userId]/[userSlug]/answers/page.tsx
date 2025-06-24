@@ -7,32 +7,30 @@ import Link from "next/link";
 import { Query } from "node-appwrite";
 import React from 'react'
 
-const page = async({
+const page = async ({
     params,
     searchParams,
 }: {
-    params: Promise<{userId: string, userSlug: string}>,
-    searchParams: Promise<{ page?: string }>
+    params: { userId: string, userSlug: string },
+    searchParams: { page?: string }
 }) => {
-    const resolvedParams = await params;
-    const resolvedSearchParams = await searchParams;
     const queries = [
-        Query.equal("authorId", resolvedParams.userId),
+        Query.equal("authorId", params.userId),
         Query.orderDesc("$createdAt"),
-        Query.offset((+(resolvedSearchParams?.page ?? "1") - 1) * 25),
+        Query.offset((+(searchParams?.page ?? "1") - 1) * 25),
         Query.limit(25),
     ];
 
     const answers = await databases.listDocuments(db, answerCollection, queries);
 
     answers.documents = await Promise.all(
-        answers.documents.map(async(ans) => {
+        answers.documents.map(async (ans) => {
             const question = await databases.getDocument(db, questionCollection, ans.questionId, [Query.select(["title"])]);
 
-            return {...ans, question}
+            return { ...ans, question }
         }));
 
-  return (
+    return (
         <div className="px-4">
             <div className="mb-4">
                 <p>{answers.total} answers</p>
