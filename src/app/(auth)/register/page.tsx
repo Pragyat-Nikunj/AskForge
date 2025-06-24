@@ -53,7 +53,7 @@ function RegisterPage() {
       }
       else {
         toast.success("Registration Successful");
-        window.location.href = "/";
+        router.push("/");
       }
     }
 

@@ -41,7 +41,7 @@ function LoginPage() {
     }
     else {
       toast.success("Login Successful");
-      window.location.href = "/";
+      router.push("/");
     }
     setIsLoading(false);
   };
