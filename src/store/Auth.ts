@@ -1,8 +1,8 @@
-import {create} from "zustand";
+import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { persist } from "zustand/middleware";
 
-import {AppwriteException, ID, Models} from "appwrite";
+import { AppwriteException, ID, Models } from "appwrite";
 import { account } from "@/models/client/config";
 import { error } from "console";
 
@@ -46,32 +46,41 @@ export const useAuthStore = create<IAuthStore>()(
             hydrated: false,
 
             setHydrated() {
-                set({hydrated: true})
+                set({ hydrated: true })
             },
 
             async verifySession() {
                 try {
                     const session = await account.getSession("current");
-                    set({session});
+                    const [user, { jwt }] = await Promise.all([
+                        account.get<UserPrefs>(),
+                        account.createJWT()
+                    ]);
+                    if (user && !user.prefs?.reputation) {
+                        await account.updatePrefs<UserPrefs>({ reputation: 0 });
+                    }
+                    set({ session, user, jwt });
                 } catch (error) {
-                    console.log(error);  
+                    // This error means no session was found. Clear the state.
+                    set({ session: null, jwt: null, user: null });
+                    console.log("No active session found.");
                 }
             },
 
             async login(email, password) {
                 try {
-                 const session = await account.createEmailPasswordSession(email, password);
-                 const [user, {jwt}] = await Promise.all([
-                    account.get<UserPrefs>(),
-                    account.createJWT()
-                 ])
-                 if (!user.prefs?.reputation) await account.updatePrefs<UserPrefs>({
-                    reputation: 0
-                 })
-                 set({session, user, jwt});
-                 return {success: true}
+                    const session = await account.createEmailPasswordSession(email, password);
+                    const [user, { jwt }] = await Promise.all([
+                        account.get<UserPrefs>(),
+                        account.createJWT()
+                    ])
+                    if (!user.prefs?.reputation) await account.updatePrefs<UserPrefs>({
+                        reputation: 0
+                    })
+                    set({ session, user, jwt });
+                    return { success: true }
                 } catch (error) {
-                    console.log(error); 
+                    console.log(error);
                     return {
                         success: false,
                         error: error instanceof AppwriteException ? error : null
@@ -97,10 +106,10 @@ export const useAuthStore = create<IAuthStore>()(
             async logout() {
                 try {
                     await account.deleteSessions();
-                    set({session: null, jwt: null, user: null})
+                    set({ session: null, jwt: null, user: null })
                 } catch (error) {
                     console.log(error);
-                    
+
                 }
             },
         })),
@@ -109,7 +118,7 @@ export const useAuthStore = create<IAuthStore>()(
             onRehydrateStorage() {
                 return (state, error) => {
                     if (!error) state?.setHydrated()
-                } 
+                }
             }
         }
     )

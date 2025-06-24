@@ -5,8 +5,9 @@ import { Particles } from "@/components/magicui/particles";
 import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { useAuthStore } from "@/store/Auth";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 const IconCloud = dynamic(() => import("@/components/magicui/icon-cloud"), {
     ssr: false,
@@ -46,22 +47,60 @@ const slugs = [
 ];
 
 const HeroSectionHeader = () => {
-    const { session, logout } = useAuthStore();
-    const [isClient, setIsClient] = useState(false);
+    const { user, hydrated, logout, verifySession } = useAuthStore();
+    const router = useRouter();
 
     useEffect(() => {
-        setIsClient(true);
-    }, []);
+        // On initial load, verify the session to sync client state with server session
+        verifySession();
+    }, [verifySession]);
 
     const handleLogout = async () => {
         try {
             await logout();
             toast.success("Logged out successfully");
-            window.location.reload();
+            router.refresh();
         } catch (error) {
             toast.error("Failed to log out");
         }
     };
+
+    // Render a loading skeleton until the store is rehydrated from localStorage
+    if (!hydrated) {
+        return (
+            <div className="container mx-auto px-4">
+                <Particles
+                    className="fixed inset-0 h-full w-full"
+                    quantity={500}
+                    ease={100}
+                    color="#ffffff"
+                    refresh
+                />
+                <div className="relative z-10 grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="flex items-center justify-center">
+                        <div className="space-y-4 text-center">
+                            <h1 className="pointer-events-none z-10 whitespace-pre-wrap bg-gradient-to-b from-[#ffd319] via-[#ff2975] to-[#8c1eff] bg-clip-text text-center text-7xl font-bold leading-none tracking-tighter text-transparent">
+                                AskForge
+                            </h1>
+                            <p className="text-center text-xl font-bold leading-none tracking-tighter">
+                                Ask questions, share knowledge, and collaborate with developers
+                                worldwide. Join our community and enhance your coding skills!
+                            </p>
+                            <div className="flex items-center justify-center gap-4">
+                                <div className="h-12 w-32 animate-pulse rounded-full bg-gray-700"></div>
+                                <div className="h-12 w-24 animate-pulse rounded-full bg-gray-700"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex items-center justify-center">
+                        <div className="relative max-w-[32rem] overflow-hidden">
+                            <IconCloud iconSlugs={slugs} />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="container mx-auto px-4">
@@ -83,7 +122,7 @@ const HeroSectionHeader = () => {
                             worldwide. Join our community and enhance your coding skills!
                         </p>
                         <div className="flex items-center justify-center gap-4">
-                            {isClient && session ? (
+                            {user ? (
                                 <>
                                     <Link href="/questions/ask">
                                         <ShimmerButton className="shadow-2xl">
