@@ -53,20 +53,13 @@ function RegisterPage() {
       }
       else {
         toast.success("Registration Successful");
-        router.push("/");
       }
     }
 
     setIsLoading(false);
   };
 
-  if (session) {
-    return (
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 min-h-screen flex items-center justify-center p-4 text-white">
-        <p>You are already logged in. Redirecting...</p>
-      </div>
-    );
-  }
+
 
   return (
     <div className="bg-gradient-to-br from-slate-900 to-slate-800 min-h-screen flex items-center justify-center p-4">

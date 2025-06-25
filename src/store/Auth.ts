@@ -2,9 +2,8 @@ import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { persist } from "zustand/middleware";
 
-import { AppwriteException, ID, Models } from "appwrite";
+import { AppwriteException, ID, Models } from "appwrite"
 import { account } from "@/models/client/config";
-import { error } from "console";
 
 
 export interface UserPrefs {
@@ -12,30 +11,33 @@ export interface UserPrefs {
 }
 
 interface IAuthStore {
-    session: Models.Session | null
+    session: Models.Session | null;
     jwt: string | null
     user: Models.User<UserPrefs> | null
     hydrated: boolean
 
-    setHydrated(): void
-    verifySession(): Promise<void>
+    setHydrated(): void;
+    verfiySession(): Promise<void>;
     login(
         email: string,
         password: string
-    ): Promise<{
-        success: boolean;
-        error?: AppwriteException | null
-    }>
+    ): Promise<
+        {
+            success: boolean;
+            error?: AppwriteException | null
+        }>
     createAccount(
         name: string,
         email: string,
         password: string
-    ): Promise<{
-        success: boolean;
-        error?: AppwriteException | null
-    }>
+    ): Promise<
+        {
+            success: boolean;
+            error?: AppwriteException | null
+        }>
     logout(): Promise<void>
 }
+
 
 export const useAuthStore = create<IAuthStore>()(
     persist(
@@ -49,41 +51,39 @@ export const useAuthStore = create<IAuthStore>()(
                 set({ hydrated: true })
             },
 
-            async verifySession() {
+            async verfiySession() {
                 try {
-                    const session = await account.getSession("current");
-                    const [user, { jwt }] = await Promise.all([
-                        account.get<UserPrefs>(),
-                        account.createJWT()
-                    ]);
-                    if (user && !user.prefs?.reputation) {
-                        await account.updatePrefs<UserPrefs>({ reputation: 0 });
-                    }
-                    set({ session, user, jwt });
+                    const session = await account.getSession("current")
+                    set({ session })
+
                 } catch (error) {
-                    // This error means no session was found. Clear the state.
-                    set({ session: null, jwt: null, user: null });
-                    console.log("No active session found.");
+                    console.log(error)
                 }
             },
 
-            async login(email, password) {
+            async login(email: string, password: string) {
                 try {
-                    const session = await account.createEmailPasswordSession(email, password);
+                    const session = await account.createEmailPasswordSession(email, password)
                     const [user, { jwt }] = await Promise.all([
                         account.get<UserPrefs>(),
                         account.createJWT()
+
                     ])
                     if (!user.prefs?.reputation) await account.updatePrefs<UserPrefs>({
                         reputation: 0
                     })
-                    set({ session, user, jwt });
+
+                    set({ session, user, jwt })
+
                     return { success: true }
+
                 } catch (error) {
-                    console.log(error);
+
+                    console.log(error)
                     return {
                         success: false,
-                        error: error instanceof AppwriteException ? error : null
+                        error: error instanceof AppwriteException ? error : null,
+
                     }
                 }
             },
@@ -91,25 +91,24 @@ export const useAuthStore = create<IAuthStore>()(
             async createAccount(name: string, email: string, password: string) {
                 try {
                     await account.create(ID.unique(), email, password, name)
-                    return {
-                        success: true
-                    }
+                    return { success: true }
                 } catch (error) {
-                    console.log(error);
+                    console.log(error)
                     return {
                         success: false,
                         error: error instanceof AppwriteException ? error : null,
+
                     }
                 }
             },
 
             async logout() {
                 try {
-                    await account.deleteSessions();
+                    await account.deleteSessions()
                     set({ session: null, jwt: null, user: null })
-                } catch (error) {
-                    console.log(error);
 
+                } catch (error) {
+                    console.log(error)
                 }
             },
         })),
